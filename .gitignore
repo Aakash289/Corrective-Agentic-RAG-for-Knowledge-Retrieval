@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/bm25_index.pkl
+data/eval_results.csv
+*.egg-info/
+data/chroma/
