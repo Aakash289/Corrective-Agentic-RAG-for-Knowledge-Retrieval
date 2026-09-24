@@ -1,0 +1,43 @@
+%%{init: {'theme': 'base', 'themeVariables': {'background': '#FFFFFF', 'primaryColor': '#F3F4F6', 'primaryTextColor': '#111827', 'primaryBorderColor': '#9CA3AF', 'lineColor': '#6B7280', 'textColor': '#111827'}}}%%
+flowchart TD
+    Start([User Question]) --> IG[Input Guardrail]
+    IG -->|manipulation detected| Blocked([Blocked])
+    IG -->|passed| CQ[Classify Query]
+
+    CQ --> RT[Retrieve: BM25 / Keyword]
+    CQ --> RS[Retrieve: Semantic / Vector]
+    CQ --> RG[Retrieve: Knowledge Graph]
+
+    RT --> FR[Fuse and Rerank<br/>RRF + Cross-Encoder]
+    RS --> FR
+    RG -.graph facts kept separate.-> GEN
+
+    FR --> GR{Grade Relevance<br/>top-K majority vote}
+
+    GR -->|relevant| RK[Refine Knowledge<br/>decompose / recompose]
+    GR -->|mixed or irrelevant| WS[Web Search<br/>Tavily]
+
+    WS --> GWR[Grade Web Results]
+    GWR --> RK
+
+    RK --> GEN[Generate Answer<br/>+ credibility-aware prompting]
+    GEN --> OG{Output Guardrail<br/>claim-level faithfulness}
+
+    OG -->|passed| SR[Score Response]
+    OG -->|failed, retry available| GEN
+    OG -->|failed, retries exhausted| FB[Fallback Response<br/>honest non-answer]
+
+    FB --> SR
+    SR --> End([Final Answer])
+
+    classDef guardrail fill:#FEE2E2,stroke:#DC2626,stroke-width:1px,color:#111827
+    classDef retrieval fill:#DBEAFE,stroke:#3B82F6,stroke-width:1px,color:#111827
+    classDef corrective fill:#FEF3C7,stroke:#D97706,stroke-width:1px,color:#111827
+    classDef terminal fill:#D1FAE5,stroke:#16A34A,stroke-width:1px,color:#111827
+    classDef process fill:#EDE9FE,stroke:#7C3AED,stroke-width:1px,color:#111827
+
+    class IG,OG guardrail
+    class RT,RS,RG,FR retrieval
+    class GR,WS,GWR,FB corrective
+    class Start,Blocked,End terminal
+    class RK,GEN,SR process
